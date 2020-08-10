@@ -3,6 +3,8 @@ title: "Exploring phage networks"
 author: "Sasha Mikheyev"
 date: "8/10/2020"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}

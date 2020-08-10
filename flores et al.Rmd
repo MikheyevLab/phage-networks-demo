@@ -3,6 +3,8 @@ title: "Flores et al"
 author: "Sasha Mikheyev"
 date: "8/10/2020"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r}
@@ -31,10 +33,10 @@ The details of the methods are in the [online supplement](https://www.pnas.org/c
 ## Examining nestedness in the data set
 
 - Note: I'm using 100 permutations for speed, in reality you would want something like 1000.
-- To speed things up I pre-computed a couple of the variables.
+- To speed things up I pre-computed a couple of the variables. The `readRDS` and `loadRDS` commands just check to see if pre-computed results exist and load them, if need be.
 
 ```{r nestedness}
-if (file.exists("nulls.Rdata")) {
+if (file.exists("nulls.RData")) {
   nulls <- readRDS("nulls.RData")
 } else { 
   nulls <- lapply(phageDat, function(x) nullmodel(x, N=100, method="shuffle.web"))
@@ -53,7 +55,7 @@ if (file.exists("nestednessNulls.Rdata")) {
 
 ## Examining output
 
-We'll try to make something like Fig. 6B for 
+We'll try to make something like Fig. 6B.
 
 ```{r}
 nestednessDat <- data.frame(mean = sapply(nestednessNulls, function(x) mean(x)),
@@ -71,7 +73,7 @@ On the whole, we're getting similar results, in that networks seem slightly more
 ## Homework
 
 - Recreate Fig. 6A.
-- According to Delmas et al NODF is currently the most commonly used nestedness measure
+- According to Delmas et al NODF is currently the most commonly used nestedness measure. Does using it affect the results?
 - Do you get the same results if you use a different network permutation approach? Here I used the `shuffle.web` algorithm, but `mgen` should also work for binary networks. You can find more information about there algorithms by examining the function documentation, e.g., `?shuffle.web`
 - Do we need addtional null models for our study?
 
