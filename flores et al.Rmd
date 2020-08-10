@@ -7,7 +7,7 @@ output: html_document
 
 ```{r}
 library(tidyverse) # various useful R enhancenents
-library(readxl) # for reading excel fikes
+library(readxl) # for reading excel files
 library(bipartite) # for network tools
 ```
 
@@ -30,11 +30,25 @@ The details of the methods are in the [online supplement](https://www.pnas.org/c
 
 ## Examining nestedness in the data set
 
-Note: I'm using 100 permutations for speed, in reality you would want something like 1000.
+- Note: I'm using 100 permutations for speed, in reality you would want something like 1000.
+- To speed things up I pre-computed a couple of the variables.
 
 ```{r nestedness}
+if (file.exists("nulls.Rdata")) {
+  nulls <- readRDS("nulls.RData")
+} else { 
+  nulls <- lapply(phageDat, function(x) nullmodel(x, N=100, method="shuffle.web"))
+  saveRDS(nulls, "nulls.RData")
+}
+
 nestednessObs <- sapply(phageDat, function(x) networklevel(x, index="nestedness"))
-nestednessNulls <- pbapply::pblapply(nulls, function (x) sapply(x, function(y) networklevel(y, index="nestedness")))
+
+if (file.exists("nestednessNulls.Rdata")) {
+  nestednessNulls <- readRDS("nestednessNulls.RData")
+} else { 
+  nestednessNulls <- pbapply::pblapply(nulls, function (x) sapply(x, function(y) networklevel(y, index="nestedness")))
+  saveRDS(nestednessNulls, "nestednessNulls.RData")
+}
 ```
 
 ## Examining output
@@ -47,7 +61,7 @@ nestednessDat <- data.frame(mean = sapply(nestednessNulls, function(x) mean(x)),
            upper = sapply(nestednessNulls, function(x) quantile(x, 0.975, na.rm = T)),
            observed = nestednessObs,
            study = studies)
-nestednessDat$study <- factor(nestednessDat$study, levels = studies[order(nestednessDat$mean)]) 
+nestednessDat$study <- factor(nestednessDat$study, levels = studies[order(nestednessDat$mean)])
 
 ggplot(nestednessDat, aes(x = study, y = observed)) + geom_point(color = "red") + geom_point(aes(y = mean), color = "black") + geom_errorbar(aes(ymin = lower, ymax = upper, width = 0.2)) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
@@ -56,6 +70,8 @@ On the whole, we're getting similar results, in that networks seem slightly more
 
 ## Homework
 
-Recreate Fig. 6A.
-
+- Recreate Fig. 6A.
+- According to Delmas et al NODF is currently the most commonly used nestedness measure
+- Do you get the same results if you use a different network permutation approach? Here I used the `shuffle.web` algorithm, but `mgen` should also work for binary networks. You can find more information about there algorithms by examining the function documentation, e.g., `?shuffle.web`
+- Do we need addtional null models for our study?
 

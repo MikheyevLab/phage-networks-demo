@@ -1,5 +1,5 @@
 name: conda-environment
 channels:
-  r
+  - r
 dependencies:
-  r-base
+  - r-base
