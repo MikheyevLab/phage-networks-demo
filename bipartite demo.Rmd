@@ -1,0 +1,48 @@
+---
+title: "Exploring phage networks"
+author: "Sasha Mikheyev"
+date: "8/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse) # various useful R enhancenents
+library(bipartite) # for network tools
+```
+
+## Bipartite library exporation
+
+We'll go though some relevant elements of the [bipartite vignette](https://cran.r-project.org/web/packages/bipartite/vignettes/Intro2bipartite.pdf)
+
+```{r bipartite}
+plotweb(motten1982)
+visweb(motten1982)
+mod <- computeModules(motten1982)
+plotModuleWeb(mod)
+```
+
+# Network-level statistics
+
+```{r}
+networklevel(bezerra2009, index=c("ISA", "NODF", "Fisher alpha"), SAmethod="log")
+```
+
+## Modularity
+`computeModules` produces a specific data class. You can find documentation on the data class returned by computeModules [here](https://www.rdocumentation.org/packages/bipartite/versions/2.15/topics/moduleWeb-class).
+- it contains a `likelihood` parameter, which is the extent of modularity  
+
+```{r modularity}
+mod <- computeModules(motten1982)
+plotModuleWeb(mod)
+```
+
+Testing whether modularity in this data set is higher than expected by chance. Note: `N` is set low, for speed. If you want to trust these results, you would have to increase it to 1000 or more.
+
+```{r module_nullmodel}
+nulls <- nullmodel(motten1982, N=100, method="r2d")
+Inulls <- pbapply::pbsapply(nulls, function(x) computeModules(x)@likelihood) 
+ggplot(data.frame(Q = Inulls), aes(Q)) + geom_density() + geom_vline(xintercept = mod@likelihood, color = "red") + xlim(0,1)
+```
+
+### Random thoughts
+-  potential for apparent competition function may be relevant to phage-bacterial interactions

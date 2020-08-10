@@ -1,0 +1,61 @@
+---
+title: "Flores et al"
+author: "Sasha Mikheyev"
+date: "8/10/2020"
+output: html_document
+---
+
+```{r}
+library(tidyverse) # various useful R enhancenents
+library(readxl) # for reading excel fikes
+library(bipartite) # for network tools
+```
+
+## Flores et al
+
+Read raw data from the excel file. There are separate sheets for each experiment, and we load all of them into a list, where each element is a matrix.
+
+```{r load_Flores_data}
+studies <- excel_sheets("data/sd02.xls")
+phageDat <- lapply(studies, function(x) read_excel("data/sd02.xls", sheet = x))
+names(phageDat) <- studies
+```
+
+## Getting started
+
+- What was indixes were analyzed in the original paper?
+
+The details of the methods are in the [online supplement](https://www.pnas.org/content/pnas/suppl/2011/06/24/1101595108.DCSupplemental/sapp.pdf). 
+- They used the Q metric 
+
+## Examining nestedness in the data set
+
+Note: I'm using 100 permutations for speed, in reality you would want something like 1000.
+
+```{r nestedness}
+nestednessObs <- sapply(phageDat, function(x) networklevel(x, index="nestedness"))
+nestednessNulls <- pbapply::pblapply(nulls, function (x) sapply(x, function(y) networklevel(y, index="nestedness")))
+```
+
+## Examining output
+
+We'll try to make something like Fig. 6B for 
+
+```{r}
+nestednessDat <- data.frame(mean = sapply(nestednessNulls, function(x) mean(x)),
+           lower = sapply(nestednessNulls, function(x) quantile(x, 0.025, na.rm = T)),
+           upper = sapply(nestednessNulls, function(x) quantile(x, 0.975, na.rm = T)),
+           observed = nestednessObs,
+           study = studies)
+nestednessDat$study <- factor(nestednessDat$study, levels = studies[order(nestednessDat$mean)]) 
+
+ggplot(nestednessDat, aes(x = study, y = observed)) + geom_point(color = "red") + geom_point(aes(y = mean), color = "black") + geom_errorbar(aes(ymin = lower, ymax = upper, width = 0.2)) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+On the whole, we're getting similar results, in that networks seem slightly more nested than observed. The results don't quite match up, since I don't think we're using the same kind of null model and the same nestedness statistic, but overall similar
+
+## Homework
+
+Recreate Fig. 6A.
+
+
